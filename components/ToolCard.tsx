@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 interface ToolCardProps {
   name: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: string;
   href: string;
   category: string;
   supportedFormats?: string[];
@@ -17,7 +17,7 @@ interface ToolCardProps {
 export default function ToolCard({
   name,
   description,
-  icon: Icon,
+  icon,
   href,
   category,
   supportedFormats,
@@ -66,8 +66,8 @@ export default function ToolCard({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`group relative block p-6 sm:p-8 bg-white rounded-2xl border-2 transition-all duration-300 hover:shadow-soft-xl hover:-translate-y-1 ${isDragging
-          ? 'border-brand-500 bg-brand-50 shadow-soft-xl scale-105'
-          : 'border-slate-200 hover:border-brand-300'
+        ? 'border-brand-500 bg-brand-50 shadow-soft-xl scale-105'
+        : 'border-slate-200 hover:border-brand-300'
         }`}
     >
       {/* Drag & Drop Overlay */}
@@ -89,7 +89,7 @@ export default function ToolCard({
 
       {/* Icon */}
       <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 sm:mb-6 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-soft group-hover:shadow-glow transition-all duration-300 group-hover:scale-110">
-        <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+        <span className="text-3xl sm:text-4xl">{icon}</span>
       </div>
 
       {/* Content */}

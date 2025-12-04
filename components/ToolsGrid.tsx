@@ -117,11 +117,42 @@ export default function ToolsGrid() {
 
             return (
               <div key={category.id} className="bg-white rounded-2xl shadow-soft-md p-6 sm:p-8">
-                );
-          })}
+                {/* Category Header with Visual Separator */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    {/* Icon Badge */}
+                    <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-white border-2 border-brand-800 flex items-center justify-center shadow-soft group-hover:bg-brand-800 transition-all duration-300">
+                      <IconComponent className="w-7 h-7 text-brand-800 group-hover:text-white" />
+                    </div>
+
+                    {/* Category Name */}
+                    <div className="flex-1">
+                      <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">
+                        {category.name}
+                      </h2>
+                      <p className="text-sm text-slate-500 mt-0.5">
+                        {categoryTools.length} {categoryTools.length === 1 ? 'tool' : 'tools'} available
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Decorative Line */}
+                  <div className="h-px bg-gradient-to-r from-brand-200 via-brand-300 to-transparent"></div>
+                </div>
+
+                {/* Tools Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {categoryTools.map((tool, index) => (
+                    <div key={tool.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                      <ToolCard name={tool.title} description={tool.description} icon={tool.icon} href={tool.href} category={tool.category} supportedFormats={tool.supportedFormats} maxFileSize={tool.maxFileSize} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            )
-          }
-    </div >
-      );
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
