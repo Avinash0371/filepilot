@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import Link from 'next/link';
 
 export default function PrivacyPage() {
@@ -152,11 +153,26 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Third-Party Services</h2>
             <p className="text-slate-700">
               Our service uses open-source conversion tools (FFmpeg, ImageMagick, LibreOffice) running on our servers.
-              <h2 className="text-2xl font-bold text-slate-900 mb-4">Changes to This Policy</h2>
-              <p className="text-slate-700">
-                We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Last updated" date.
-                Continued use of the service after changes constitutes acceptance of the updated policy.
-              </p>
+              We do not send your files to any external third-party services or APIs.
+            </p>
+          </section>
+
+          {/* Children's Privacy */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Children's Privacy</h2>
+            <p className="text-slate-700">
+              Our service is not directed to children under 13. We do not knowingly collect information from children.
+              If you are under 13, please do not use our service.
+            </p>
+          </section>
+
+          {/* Changes to Policy */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Changes to This Policy</h2>
+            <p className="text-slate-700">
+              We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Last updated" date.
+              Continued use of the service after changes constitutes acceptance of the updated policy.
+            </p>
           </section>
 
           {/* Contact */}
@@ -170,6 +186,19 @@ export default function PrivacyPage() {
                 Email: <a href="mailto:sudhimallaavinash07@gmail.com" className="text-brand-600 hover:text-brand-700">sudhimallaavinash07@gmail.com</a>
               </p>
             </div>
+          </section>
+
+          {/* Summary */}
+          <div className="bg-gradient-to-r from-brand-50 to-blue-50 border border-brand-200 p-6 rounded-xl mt-12">
+            <h3 className="text-xl font-bold text-brand-900 mb-3">In Summary</h3>
+            <p className="text-brand-800 mb-3">
+              <strong>Your privacy is our priority.</strong> We process your files securely, delete them immediately after conversion,
+              and never store or share your data. You retain full ownership of your files, and we are not liable for any data loss.
+            </p>
+            <p className="text-brand-700 text-sm mb-0">
+              Always keep backups of important files before conversion.
+            </p>
+          </div>
 
         </div>
       </div>
