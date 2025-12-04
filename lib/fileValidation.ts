@@ -60,21 +60,13 @@ const FILE_SIGNATURES = {
  * Read first N bytes from a file
  */
 async function readFileBytes(file: File, numBytes: number): Promise<Uint8Array> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+    try {
         const blob = file.slice(0, numBytes);
-
-        reader.onload = () => {
-            if (reader.result instanceof ArrayBuffer) {
-                resolve(new Uint8Array(reader.result));
-            } else {
-                reject(new Error('Failed to read file as ArrayBuffer'));
-            }
-        };
-
-        reader.onerror = () => reject(reader.error);
-        reader.readAsArrayBuffer(blob);
-    });
+        const arrayBuffer = await blob.arrayBuffer();
+        return new Uint8Array(arrayBuffer);
+    } catch (error) {
+        throw new Error('Failed to read file bytes');
+    }
 }
 
 /**
