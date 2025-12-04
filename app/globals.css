@@ -1005,3 +1005,31 @@ body {
   33% { transform: translateY(-15px) rotate(5deg); }
   66% { transform: translateY(-8px) rotate(-5deg); }
 }
+
+
+/* ==========================================
+   Mobile Performance Optimizations
+   ========================================== */
+
+/* Disable animations on mobile for better performance */
+@media (max-width: 640px) {
+  .animate-pulse, .animate-spin, .animate-bounce, .float, .float-slow, .float-fast {
+    animation: none !important;
+  }
+  * { transition-duration: 0.15s !important; }
+  .backdrop-blur, .backdrop-blur-lg, .backdrop-blur-md {
+    backdrop-filter: none !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+  .shadow-soft-lg, .shadow-soft-xl, .shadow-glow {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
