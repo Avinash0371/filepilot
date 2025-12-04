@@ -49,15 +49,15 @@ export default function ToolsGrid() {
       {/* Search and Filter */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
         <div className="flex flex-col gap-6">
-          {/* Search Bar */}
-          <div className="relative max-w-xl mx-auto w-full">
-            <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          {/* Search Bar - Enhanced Visibility */}
+          <div className="relative max-w-2xl mx-auto w-full">
+            <Icons.Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-500" />
             <input
               type="text"
               placeholder="Search for tools (e.g., PDF to Word, Image Compressor)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-base shadow-soft-md focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:shadow-glow transition-all"
+              className="w-full pl-14 pr-4 py-4 text-lg bg-slate-50 border-2 border-slate-300 rounded-2xl shadow-lg focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-200 focus:shadow-glow focus:bg-white transition-all placeholder:text-slate-400"
             />
           </div>
 
