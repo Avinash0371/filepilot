@@ -123,66 +123,36 @@ export default function ProgressIndicator({
             {fileSize && (
               <span className="text-sm text-slate-500 mt-0.5 block">
                 {fileSize}
-              </span>
+                {timeRemaining && (
+                  <div className="flex items-center gap-1.5">
+                    <Icons.Clock className="w-4 h-4" />
+                    <span>{timeRemaining} remaining</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Success State - Enhanced */}
+            {status === 'done' && (
+              <div className="mt-4 pt-4 border-t border-emerald-200">
+                <div className="flex items-center gap-2 text-emerald-700">
+                  <Icons.Check className="w-5 h-5" />
+                  <span className="text-sm font-medium">Your file is ready to download!</span>
+                </div>
+              </div>
+            )}
+
+            {/* Error State - Enhanced with Retry */}
+            {status === 'error' && onRetry && (
+              <div className="mt-4 pt-4 border-t border-red-200">
+                <button
+                  onClick={onRetry}
+                  className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-200 hover:shadow-glow"
+                >
+                  Try Again
+                </button>
+              </div>
             )}
           </div>
-        </div>
-
-        {/* Progress Percentage */}
-        {(status === 'uploading' || status === 'converting') && (
-          <div className={`text-2xl font-bold ${config.textColor}`}>
-            {Math.round(actualProgress)}%
-          </div>
-        )}
-      </div>
-
-      {/* Progress Bar */}
-      <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner mb-3">
-        <div
-          className={`h-full ${config.barClass} transition-all duration-500 rounded-full`}
-          style={{ width: `${actualProgress}%` }}
-        />
-      </div>
-
-      {/* Additional Info Row */}
-      {(speed || timeRemaining) && (
-        <div className="flex items-center justify-between text-sm text-slate-600">
-          {speed && (
-            <div className="flex items-center gap-1.5">
-              <Icons.Bolt className="w-4 h-4" />
-              <span>{speed}</span>
-            </div>
-          )}
-          {timeRemaining && (
-            <div className="flex items-center gap-1.5">
-              <Icons.Clock className="w-4 h-4" />
-              <span>{timeRemaining} remaining</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Success State - Enhanced */}
-      {status === 'done' && (
-        <div className="mt-4 pt-4 border-t border-emerald-200">
-          <div className="flex items-center gap-2 text-emerald-700">
-            <Icons.Check className="w-5 h-5" />
-            <span className="text-sm font-medium">Your file is ready to download!</span>
-          </div>
-        </div>
-      )}
-
-      {/* Error State - Enhanced with Retry */}
-      {status === 'error' && onRetry && (
-        <div className="mt-4 pt-4 border-t border-red-200">
-          <button
-            onClick={onRetry}
-            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-200 hover:shadow-glow"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
-    </div>
-  );
+          );
 }
