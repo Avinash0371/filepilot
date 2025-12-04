@@ -111,27 +111,14 @@ export default function ProgressIndicator({
   return (
     <div className={`w-full p-6 rounded-2xl ${config.bgColor} shadow-soft-md transition-all duration-300 animate-fade-in`}>
       {/* Header with Icon and Message */}
-
-      {/* Success State - Enhanced */}
-      {status === 'done' && (
-        <div className="mt-4 pt-4 border-t border-emerald-200">
-          <div className="flex items-center gap-2 text-emerald-700">
-            <Icons.Check className="w-5 h-5" />
-            <span className="text-sm font-medium">Your file is ready to download!</span>
-          </div>
-        </div>
-      )}
-
-      {/* Error State - Enhanced with Retry */}
-      {status === 'error' && onRetry && (
-        <div className="mt-4 pt-4 border-t border-red-200">
-          <button
-            onClick={onRetry}
-            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-200 hover:shadow-glow"
-          >
-            Try Again
-          </button>
-        </div>
+      <div className="mt-4 pt-4 border-t border-red-200">
+        <button
+          onClick={onRetry}
+          className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-200 hover:shadow-glow"
+        >
+          Try Again
+        </button>
+      </div>
       )}
     </div>
   );
