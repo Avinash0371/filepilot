@@ -9,6 +9,7 @@ import ProgressIndicator, { ProgressStatus } from '@/components/ProgressIndicato
 import ConversionSkeleton from '@/components/ConversionSkeleton';
 import StepIndicator from '@/components/StepIndicator';
 import SimilarTools from '@/components/SimilarTools';
+import { useUploadProgress } from '@/hooks/useUploadProgress';
 
 interface ConversionResult {
   blob: Blob;
@@ -20,6 +21,7 @@ export default function PdfToWordPage() {
   const [status, setStatus] = useState<ProgressStatus>('idle');
   const [message, setMessage] = useState('');
   const [results, setResults] = useState<ConversionResult[]>([]);
+  const { uploadProgress, uploadSpeed, timeRemaining, uploadFile, resetProgress } = useUploadProgress();
 
   const handleFilesSelected = useCallback((selectedFiles: File[]) => {
     setFiles(selectedFiles);
@@ -34,24 +36,26 @@ export default function PdfToWordPage() {
     if (files.length === 0) return;
 
     setStatus('uploading');
-    setMessage(`Processing ${files.length} file${files.length > 1 ? 's' : ''}...`);
+    setMessage(`Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`);
     setResults([]);
+    resetProgress();
 
     try {
       const convertedResults: ConversionResult[] = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        setStatus('converting');
-        setMessage(`Converting ${i + 1} of ${files.length}: ${file.name}`);
+        setStatus('uploading');
+        setMessage(`Uploading ${file.name} (${i + 1}/${files.length})...`);
 
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch('/api/pdf-to-word', {
-          method: 'POST',
-          body: formData,
-        });
+        const response = await uploadFile('/api/pdf-to-word', formData);
+
+        setStatus('converting');
+        setMessage(`Converting ${file.name}...`);
+        resetProgress();
 
         if (!response.ok) {
           const error = await response.json();
@@ -111,7 +115,13 @@ export default function PdfToWordPage() {
         )}
 
         {status !== 'idle' && (
-          <ProgressIndicator status={status} message={message} />
+          <ProgressIndicator
+            status={status}
+            message={message}
+            progress={uploadProgress}
+            speed={uploadSpeed}
+            timeRemaining={timeRemaining}
+          />
         )}
 
         {status === 'converting' && (
