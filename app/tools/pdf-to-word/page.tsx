@@ -59,7 +59,17 @@ export default function PdfToWordPage() {
         }
 
         const blob = await response.blob();
-        const filename = file.name.replace(/\.pdf$/i, '.docx');
+
+        // Extract filename from Content-Disposition header
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = file.name.replace(/\.pdf$/i, '.docx');
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1].replace(/['"]/g, '');
+          }
+        }
+
         convertedResults.push({ blob, filename });
       }
 
