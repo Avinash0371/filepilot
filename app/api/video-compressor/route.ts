@@ -37,7 +37,7 @@ async function videocompressorHandler(request: NextRequest) {
     }
 
     // Validate file type and content
-    const validation = await validateFileTypeAndContent(file, ['mp4', 'webm', 'avi', 'mov']);
+    const validation = await validateFileTypeAndContent(file, ['.mp4', '.webm', '.avi', '.mov']);
     if (!validation.valid) {
       return errorResponse(validation.error || 'Invalid file');
     }
@@ -79,7 +79,7 @@ async function videocompressorHandler(request: NextRequest) {
     // Process the video compression
     let inputPath = '';
     let outputPath = '';
-    
+
 
     try {
       // CRF: 0 (lossless) to 51 (worst), 23 is default, 28 is reasonable for compression
@@ -90,9 +90,9 @@ async function videocompressorHandler(request: NextRequest) {
       }
 
       inputPath = await saveUploadedFile(file);
-    registerForCleanup(inputPath);
+      registerForCleanup(inputPath);
       outputPath = generateTmpPath('.mp4');
-    registerForCleanup(outputPath);
+      registerForCleanup(outputPath);
 
       // Compress video using FFmpeg with CRF
       await execAsync(`ffmpeg -i "${inputPath}" -vcodec libx264 -crf ${crfValue} -y "${outputPath}"`);
@@ -116,8 +116,8 @@ async function videocompressorHandler(request: NextRequest) {
       conversionQueue.completeJob(currentJobId, 'Compression failed');
       return errorResponse('Compression failed. Please try again.', 500);
     } finally {
-    unregisterFromCleanup(inputPath);
-    unregisterFromCleanup(outputPath);
+      unregisterFromCleanup(inputPath);
+      unregisterFromCleanup(outputPath);
       await cleanupFiles(inputPath, outputPath);
     }
   } catch (error) {

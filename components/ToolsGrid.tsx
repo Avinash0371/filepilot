@@ -61,33 +61,35 @@ export default function ToolsGrid() {
             />
           </div>
 
-          {/* Category Filter */}
-          <div className="flex flex-wrap justify-center gap-2.5">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${!selectedCategory
-                ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-200'
-                : 'bg-white border-2 border-slate-200 text-slate-700 hover:border-brand-300 hover:bg-slate-50'
-                }`}
-            >
-              All Tools
-            </button>
-            {categories.map((category) => {
-              const IconComponent = categoryIconMap[category.id] ? Icons[categoryIconMap[category.id]] : Icons.File;
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${selectedCategory === category.id
-                    ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-200'
-                    : 'bg-white border-2 border-slate-200 text-slate-700 hover:border-brand-300 hover:bg-slate-50'
-                    }`}
-                >
-                  <IconComponent className="w-4 h-4" />
-                  <span>{category.name}</span>
-                </button>
-              );
-            })}
+          {/* Category Filter - Horizontal Scroll on Mobile */}
+          <div className="relative -mx-6 px-6 sm:mx-0 sm:px-0">
+            <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all snap-start ${!selectedCategory
+                  ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-200'
+                  : 'bg-white border-2 border-slate-200 text-slate-700 hover:border-brand-300 hover:bg-slate-50'
+                  }`}
+              >
+                All Tools
+              </button>
+              {categories.map((category) => {
+                const IconComponent = categoryIconMap[category.id] ? Icons[categoryIconMap[category.id]] : Icons.File;
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 snap-start ${selectedCategory === category.id
+                      ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-200'
+                      : 'bg-white border-2 border-slate-200 text-slate-700 hover:border-brand-300 hover:bg-slate-50'
+                      }`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    <span>{category.name}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -116,28 +118,42 @@ export default function ToolsGrid() {
             const IconComponent = categoryIconMap[category.id] ? Icons[categoryIconMap[category.id]] : Icons.File;
 
             return (
-              <div key={category.id} className="bg-white rounded-2xl shadow-soft-md p-6 sm:p-8">
-                {/* Category Header with Visual Separator */}
+              <div key={category.id} className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-soft-md border border-slate-100 p-6 sm:p-8">
+                {/* Category Header with Color-Coded Badge */}
                 <div className="mb-6">
                   <div className="flex items-center gap-4 mb-4">
-                    {/* Icon Badge */}
-                    <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-white border-2 border-brand-800 flex items-center justify-center shadow-soft group-hover:bg-brand-800 transition-all duration-300">
-                      <IconComponent className="w-7 h-7 text-brand-800 group-hover:text-white" />
+                    {/* Color-Coded Icon Badge */}
+                    <div className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${category.id === 'pdf' ? 'from-red-500 to-red-600' :
+                        category.id === 'image' ? 'from-blue-500 to-blue-600' :
+                          category.id === 'video' ? 'from-purple-500 to-purple-600' :
+                            category.id === 'audio' ? 'from-pink-500 to-pink-600' :
+                              category.id === 'archive' ? 'from-orange-500 to-orange-600' :
+                                category.id === 'text' ? 'from-emerald-500 to-emerald-600' :
+                                  'from-brand-500 to-brand-600'
+                      } flex items-center justify-center shadow-md`}>
+                      <IconComponent className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                     </div>
 
-                    {/* Category Name */}
-                    <div className="flex-1">
-                      <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">
+                    {/* Category Name & Count */}
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">
                         {category.name}
                       </h2>
-                      <p className="text-sm text-slate-500 mt-0.5">
-                        {categoryTools.length} {categoryTools.length === 1 ? 'tool' : 'tools'} available
+                      <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                        {categoryTools.length} {categoryTools.length === 1 ? 'tool' : 'tools'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Decorative Line */}
-                  <div className="h-px bg-gradient-to-r from-brand-200 via-brand-300 to-transparent"></div>
+                  {/* Decorative Gradient Line */}
+                  <div className={`h-1 rounded-full bg-gradient-to-r ${category.id === 'pdf' ? 'from-red-400 via-red-300 to-transparent' :
+                      category.id === 'image' ? 'from-blue-400 via-blue-300 to-transparent' :
+                        category.id === 'video' ? 'from-purple-400 via-purple-300 to-transparent' :
+                          category.id === 'audio' ? 'from-pink-400 via-pink-300 to-transparent' :
+                            category.id === 'archive' ? 'from-orange-400 via-orange-300 to-transparent' :
+                              category.id === 'text' ? 'from-emerald-400 via-emerald-300 to-transparent' :
+                                'from-brand-400 via-brand-300 to-transparent'
+                    }`}></div>
                 </div>
 
                 {/* Tools Grid */}
