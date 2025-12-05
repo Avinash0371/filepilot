@@ -75,6 +75,12 @@ export default function Navbar() {
             >
               Privacy
             </Link>
+            <Link
+              href="/contact"
+              className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all duration-200"
+            >
+              Contact
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -125,6 +131,14 @@ export default function Navbar() {
                 className="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 rounded-xl transition-all"
               >
                 Privacy
+              </Link>
+
+              <Link
+                href="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 rounded-xl transition-all"
+              >
+                Contact
               </Link>
             </div>
           </div>
