@@ -28,7 +28,7 @@ async function backgroundremoverHandler(request: NextRequest) {
 
     // Convert File to Blob for the library
     const arrayBuffer = await file.arrayBuffer();
-    const blob = new Blob([arrayBuffer]);
+    const blob = new Blob([arrayBuffer], { type: file.type || 'image/png' });
 
     // Perform background removal
     const outputBlob = await removeBackground(blob);
