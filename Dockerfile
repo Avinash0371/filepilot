@@ -1,8 +1,13 @@
-FROM node:20-bullseye AS base
+FROM node:20-slim AS base
 
 # Install system dependencies for file conversion
-RUN apt-get update && apt-get install -y \
-    libreoffice \
+# Using --no-install-recommends to reduce image size
+# Installing specific LibreOffice components instead of full suite
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libreoffice-writer \
+    libreoffice-calc \
+    libreoffice-impress \
+    libreoffice-draw \
     ghostscript \
     imagemagick \
     ffmpeg \
@@ -11,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     fonts-dejavu-core \
+    procps \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Fix ImageMagick policy to allow PDF processing
