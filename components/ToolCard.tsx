@@ -27,6 +27,67 @@ export default function ToolCard({
   const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
 
+  const colorVariants: Record<string, {
+    border: string;
+    iconBg: string;
+    badge: string;
+    title: string;
+    action: string;
+  }> = {
+    pdf: {
+      border: 'hover:border-red-300',
+      iconBg: 'from-red-500 to-red-600',
+      badge: 'bg-red-100 text-red-700',
+      title: 'group-hover:text-red-600',
+      action: 'text-red-600'
+    },
+    image: {
+      border: 'hover:border-blue-300',
+      iconBg: 'from-blue-500 to-blue-600',
+      badge: 'bg-blue-100 text-blue-700',
+      title: 'group-hover:text-blue-600',
+      action: 'text-blue-600'
+    },
+    video: {
+      border: 'hover:border-purple-300',
+      iconBg: 'from-purple-500 to-purple-600',
+      badge: 'bg-purple-100 text-purple-700',
+      title: 'group-hover:text-purple-600',
+      action: 'text-purple-600'
+    },
+    audio: {
+      border: 'hover:border-pink-300',
+      iconBg: 'from-pink-500 to-pink-600',
+      badge: 'bg-pink-100 text-pink-700',
+      title: 'group-hover:text-pink-600',
+      action: 'text-pink-600'
+    },
+    archive: {
+      border: 'hover:border-orange-300',
+      iconBg: 'from-orange-500 to-orange-600',
+      badge: 'bg-orange-100 text-orange-700',
+      title: 'group-hover:text-orange-600',
+      action: 'text-orange-600'
+    },
+    text: {
+      border: 'hover:border-emerald-300',
+      iconBg: 'from-emerald-500 to-emerald-600',
+      badge: 'bg-emerald-100 text-emerald-700',
+      title: 'group-hover:text-emerald-600',
+      action: 'text-emerald-600'
+    },
+    default: {
+      border: 'hover:border-brand-300',
+      iconBg: 'from-brand-500 to-brand-600',
+      badge: 'bg-brand-100 text-brand-700',
+      title: 'group-hover:text-brand-600',
+      action: 'text-brand-600'
+    }
+  };
+
+  const variants = colorVariants[category] || colorVariants.default;
+
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -65,7 +126,7 @@ export default function ToolCard({
       onDrop={handleDrop}
       className={`group relative block p-6 sm:p-8 bg-white rounded-2xl border-2 transition-all duration-300 hover:shadow-soft-xl hover:-translate-y-1 ${isDragging
         ? 'border-brand-500 bg-brand-50 shadow-soft-xl scale-105'
-        : 'border-slate-200 hover:border-brand-300'
+        : `border-slate-200 ${variants.border}`
         }`}
     >
       {isDragging && (
@@ -79,15 +140,15 @@ export default function ToolCard({
         </div>
       )}
 
-      <div className="absolute top-4 right-4 px-3 py-1 bg-brand-100 text-brand-700 text-xs font-semibold rounded-full">
+      <div className={`absolute top-4 right-4 px-3 py-1 text-xs font-semibold rounded-full ${variants.badge}`}>
         {category}
       </div>
 
-      <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 sm:mb-6 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-soft group-hover:shadow-glow transition-all duration-300 group-hover:scale-110">
+      <div className={`w-14 h-14 sm:w-16 sm:h-16 mb-4 sm:mb-6 rounded-xl bg-gradient-to-br ${variants.iconBg} flex items-center justify-center shadow-soft group-hover:shadow-glow transition-all duration-300 group-hover:scale-110`}>
         {Icons[iconName] && React.createElement(Icons[iconName], { className: "w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" })}
       </div>
 
-      <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3 group-hover:text-brand-600 transition-colors">
+      <h3 className={`text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3 transition-colors ${variants.title}`}>
         {name}
       </h3>
       <p className="text-sm sm:text-base text-slate-600 mb-4 leading-relaxed line-clamp-2">
@@ -115,7 +176,7 @@ export default function ToolCard({
         </div>
       )}
 
-      <div className="flex items-center text-brand-600 font-semibold text-sm group-hover:gap-2 transition-all">
+      <div className={`flex items-center font-semibold text-sm group-hover:gap-2 transition-all ${variants.action}`}>
         <span>Convert Now</span>
         <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
