@@ -179,12 +179,18 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Contact Us</h2>
             <p className="text-slate-700">
-              If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:
+              If you have any questions or concerns about this Privacy Policy or our data practices, please contact us.
             </p>
-            <div className="mt-4 p-4 bg-slate-100 rounded-lg">
-              <p className="text-slate-800 font-medium">
-                Email: <a href="mailto:sudhimallaavinash07@gmail.com" className="text-brand-600 hover:text-brand-700">sudhimallaavinash07@gmail.com</a>
-              </p>
+            <div className="mt-4">
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Contact Support
+              </Link>
             </div>
           </section>
 

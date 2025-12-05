@@ -95,7 +95,11 @@ async function videocompressorHandler(request: NextRequest) {
       registerForCleanup(outputPath);
 
       // Compress video using FFmpeg with CRF
-      await execAsync(`ffmpeg -i "${inputPath}" -vcodec libx264 -crf ${crfValue} -y "${outputPath}"`);
+      // Use constrained threads to prevent OOM/CPU throttling (Exit code 137)
+      await execAsync(
+        `ffmpeg -i "${inputPath}" -vcodec libx264 -crf ${crfValue} -threads 2 -preset medium -y "${outputPath}"`,
+        { maxBuffer: 10 * 1024 * 1024 }
+      );
 
       const buffer = await readFileAsBuffer(outputPath);
       const outputFilename = file.name.replace(/\.(mp4|webm|avi|mov)$/i, '-compressed.mp4');
