@@ -1,74 +1,45 @@
 import { NextRequest } from 'next/server';
-import * as path from 'path';
+import { removeBackground } from '@imgly/background-removal-node';
 import {
-  saveUploadedFile,
-  cleanupFiles,
-  readFileAsBuffer,
   errorResponse,
   fileResponse,
   validateFileType,
   validateFileSize,
-  execAsync,
 } from '@/lib/fileUtils';
-import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
 import { withProductionFeatures } from '@/lib/apiWrapper';
-import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
 async function backgroundremoverHandler(request: NextRequest) {
-  let inputPath = '';
-  let outputPath = '';
-    
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    
+
     if (!file) {
       return errorResponse('No file provided');
     }
-    
-    if (!validateFileSize(file.size)) {
-      return errorResponse('File size exceeds 50MB limit');
+
+    // Validate file size (limit to 10MB for this specific AI tool as it's memory intensive)
+    if (!validateFileSize(file.size, 10 * 1024 * 1024)) {
+      return errorResponse('File size exceeds 10MB limit for background removal');
     }
-    
+
     if (!validateFileType(file.name, ['.png', '.jpg', '.jpeg', '.webp'])) {
       return errorResponse('Only image files (PNG, JPG, WEBP) are allowed');
     }
-    
-    inputPath = await saveUploadedFile(file);
-    registerForCleanup(inputPath);
-    const ext = path.extname(inputPath);
-    const baseName = path.basename(inputPath, ext);
-    const outputDir = path.dirname(inputPath);
-    outputPath = path.join(outputDir, `${baseName}_nobg.png`);
-    registerForCleanup(outputPath);
-    
-    // Remove background using ImageMagick
-    // This uses flood fill to remove similar colored pixels from corners
-    // For better results, we use a combination of techniques
-    await execAsync(`convert "${inputPath}" -fuzz 10% -transparent white "${outputPath}"`);
-    
-    // Alternative: More sophisticated edge detection approach
-    // Try to detect and remove the most common edge color (likely background)
-    const tempPath = path.join(outputDir, `${baseName}_temp.png`);
-    try {
-      // Get the corner pixel color and make it transparent
-      await execAsync(`convert "${inputPath}" -alpha set -channel RGBA -fuzz 15% -fill none -floodfill +0+0 white -floodfill +0+0 "$(convert "${inputPath}" -format "%[pixel:p{0,0}]" info:)" "${outputPath}"`);
-    } catch {
-      // Fallback to simpler approach
-      await execAsync(`convert "${inputPath}" -fuzz 20% -transparent white "${outputPath}"`);
-    }
-    
-    const buffer = await readFileAsBuffer(outputPath);
+
+    // Convert File to Blob for the library
+    const arrayBuffer = await file.arrayBuffer();
+    const blob = new Blob([arrayBuffer]);
+
+    // Perform background removal
+    const outputBlob = await removeBackground(blob);
+    const outputBuffer = Buffer.from(await outputBlob.arrayBuffer());
+
     const outputFilename = file.name.replace(/\.(png|jpg|jpeg|webp)$/i, '_nobg.png');
-    
-    return fileResponse(buffer, outputFilename, 'image/png');
+
+    return fileResponse(outputBuffer, outputFilename, 'image/png');
   } catch (error) {
     console.error('Background removal error:', error);
     return errorResponse('Background removal failed. Please try again.', 500);
-  } finally {
-    unregisterFromCleanup(inputPath);
-    unregisterFromCleanup(outputPath);
-    await cleanupFiles(inputPath, outputPath);
   }
 }
 

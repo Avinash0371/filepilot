@@ -110,8 +110,8 @@ export function validateFileType(filename: string, allowedExtensions: string[]):
 }
 
 // Validate file size
-export function validateFileSize(size: number): boolean {
-  return size <= MAX_FILE_SIZE;
+export function validateFileSize(size: number, maxSize: number = MAX_FILE_SIZE): boolean {
+  return size <= maxSize;
 }
 
 // Enhanced validation: Check both extension AND file content
