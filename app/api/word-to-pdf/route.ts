@@ -12,8 +12,10 @@ import {
   execAsync,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function wordToPdfHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -41,6 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     const outputDir = path.dirname(inputPath);
 
     // Convert DOCX to PDF using LibreOffice
@@ -50,6 +53,7 @@ export async function POST(request: NextRequest) {
     const ext = path.extname(inputPath);
     const baseName = path.basename(inputPath, ext);
     outputPath = path.join(outputDir, `${baseName}.pdf`);
+    registerForCleanup(outputPath);
 
     const buffer = await readFileAsBuffer(outputPath);
     const outputFilename = file.name.replace(/\.(docx?|doc)$/i, '.pdf');
@@ -60,10 +64,14 @@ export async function POST(request: NextRequest) {
       response.headers.set(key, value);
     });
     return response;
-  } catch (error) {
-    console.error('Word to PDF conversion error:', error);
-    return errorResponse('Conversion failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(inputPath, outputPath);
   }
 }
+
+export const POST = withProductionFeatures(wordToPdfHandler, {
+  toolName: 'word-to-pdf',
+  category: 'pdf',
+});

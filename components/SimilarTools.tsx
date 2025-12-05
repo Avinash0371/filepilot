@@ -37,9 +37,9 @@ export default function SimilarTools({ currentTool }: SimilarToolsProps) {
 
     const tools = similarToolsMap[currentTool] || [
         { title: 'PDF to Word', href: '/tools/pdf-to-word', icon: 'PdfToWord', description: 'Convert PDF to Word' },
-        { title: 'Image Compressor', href: '/tools/image-compressor', icon: 'ImageCompressor', description: 'Compress images' },
+        { title: 'Image Compressor', href: '/tools/image-compressor', icon: 'ImageCompress', description: 'Compress images' },
         { title: 'Merge PDF', href: '/tools/merge-pdf', icon: 'MergePdf', description: 'Combine PDFs' },
-        { title: 'Background Remover', href: '/tools/background-remover', icon: 'BackgroundRemover', description: 'Remove backgrounds' },
+        { title: 'Background Remover', href: '/tools/background-remover', icon: 'BackgroundRemove', description: 'Remove backgrounds' },
     ];
 
     return (

@@ -17,8 +17,10 @@ import {
 } from '@/lib/fileUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function splitpdfHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -58,6 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     outputDir = path.join(TMP_DIR, uuidv4());
     await fs.mkdir(outputDir, { recursive: true });
 
@@ -102,7 +105,15 @@ export async function POST(request: NextRequest) {
     console.error('Split PDF error:', error);
     return errorResponse('Split failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    // outputPath not used
     await cleanupFiles(inputPath, zipPath);
     await cleanupDir(outputDir);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(splitpdfHandler, {
+  toolName: 'split-pdf',
+  category: 'pdf',
+});

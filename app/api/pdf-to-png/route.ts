@@ -15,9 +15,11 @@ import {
   TMP_DIR,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function POST(request: NextRequest) {
+async function pdftopngHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -46,6 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     outputDir = path.join(TMP_DIR, uuidv4());
     await fs.mkdir(outputDir, { recursive: true });
 
@@ -96,7 +99,15 @@ export async function POST(request: NextRequest) {
     console.error('PDF to PNG error:', error);
     return errorResponse('Conversion failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(zipPath);
     await cleanupFiles(inputPath, zipPath);
     await cleanupDir(outputDir);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(pdftopngHandler, {
+  toolName: 'pdf-to-png',
+  category: 'pdf',
+});

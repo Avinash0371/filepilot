@@ -7,15 +7,16 @@ import {
   readFileAsBuffer,
   errorResponse,
   fileResponse,
-  validateFileType,
   validateFileTypeAndContent,
   validateFileSize,
   execAsync,
   TMP_DIR,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function pdfToWordHandler(request: NextRequest) {
   // Check rate limit
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
 
@@ -45,6 +46,8 @@ export async function POST(request: NextRequest) {
     }
 
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
+
     const outputDir = path.dirname(inputPath);
 
     // Convert PDF to DOCX using LibreOffice
@@ -54,12 +57,10 @@ export async function POST(request: NextRequest) {
       { timeout: 120000 }
     );
 
-    console.log('LibreOffice stdout:', stdout);
-    if (stderr) console.log('LibreOffice stderr:', stderr);
-
     // Get the output filename
     const baseName = path.basename(inputPath, '.pdf');
     outputPath = path.join(outputDir, `${baseName}.docx`);
+    registerForCleanup(outputPath);
 
     // Check if file exists
     try {
@@ -67,8 +68,7 @@ export async function POST(request: NextRequest) {
     } catch {
       // List directory to see what files were created
       const files = await fs.readdir(outputDir);
-      console.log('Files in output dir:', files);
-      return errorResponse('Conversion failed - output file not created', 500);
+      throw new Error('Conversion failed - output file not created');
     }
 
     const buffer = await readFileAsBuffer(outputPath);
@@ -91,10 +91,17 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error) {
-    console.error('PDF to Word conversion error:', error);
-    return errorResponse('Conversion failed. Please try again.', 500);
   } finally {
+    // Cleanup files
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(inputPath, outputPath);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(pdfToWordHandler, {
+  toolName: 'pdf-to-word',
+  category: 'pdf',
+  timeout: 120000,
+});

@@ -13,8 +13,10 @@ import {
   generateTmpPath,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function ocrimageHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -22,7 +24,7 @@ export async function POST(request: NextRequest) {
   
   let inputPath = '';
   let outputPath = '';
-  
+    
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -46,7 +48,9 @@ export async function POST(request: NextRequest) {
     }
     
     inputPath = await saveUploadedFile(file);
-    outputPath = generateTmpPath(''); // Tesseract adds .txt automatically
+    registerForCleanup(inputPath);
+    outputPath = generateTmpPath('');
+    registerForCleanup(outputPath); // Tesseract adds .txt automatically
     
     // OCR using Tesseract
     await execAsync(`tesseract "${inputPath}" "${outputPath}" -l eng`);
@@ -66,6 +70,14 @@ export async function POST(request: NextRequest) {
     console.error('OCR error:', error);
     return errorResponse('OCR failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(inputPath, `${outputPath}.txt`);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(ocrimageHandler, {
+  toolName: 'ocr-image',
+  category: 'text',
+});

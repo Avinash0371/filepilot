@@ -10,11 +10,14 @@ import {
   validateFileSize,
   execAsync,
 } from '@/lib/fileUtils';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
 
-export async function POST(request: NextRequest) {
+async function ppttopdfHandler(request: NextRequest) {
   let inputPath = '';
   let outputPath = '';
-  
+    
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -32,6 +35,7 @@ export async function POST(request: NextRequest) {
     }
     
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     const outputDir = path.dirname(inputPath);
     
     // Convert PowerPoint to PDF using LibreOffice
@@ -41,6 +45,7 @@ export async function POST(request: NextRequest) {
     const ext = path.extname(inputPath);
     const baseName = path.basename(inputPath, ext);
     outputPath = path.join(outputDir, `${baseName}.pdf`);
+    registerForCleanup(outputPath);
     
     const buffer = await readFileAsBuffer(outputPath);
     const outputFilename = file.name.replace(/\.(pptx?|ppt)$/i, '.pdf');
@@ -50,6 +55,14 @@ export async function POST(request: NextRequest) {
     console.error('PowerPoint to PDF conversion error:', error);
     return errorResponse('Conversion failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(inputPath, outputPath);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(ppttopdfHandler, {
+  toolName: 'ppt-to-pdf',
+  category: 'pdf',
+});

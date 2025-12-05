@@ -13,8 +13,10 @@ import {
   generateTmpPath,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function mergepdfHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -22,6 +24,7 @@ export async function POST(request: NextRequest) {
 
   const inputPaths: string[] = [];
   let outputPath = '';
+    
 
   try {
     const formData = await request.formData();
@@ -44,6 +47,7 @@ export async function POST(request: NextRequest) {
     inputPaths.push(...savedPaths);
 
     outputPath = generateTmpPath('.pdf');
+    registerForCleanup(outputPath);
 
     // Merge PDFs using pdfunite
     const inputArgs = inputPaths.map(p => `"${p}"`).join(' ');
@@ -61,6 +65,14 @@ export async function POST(request: NextRequest) {
     console.error('Merge PDF error:', error);
     return errorResponse('Merge failed. Please try again.', 500);
   } finally {
+    // inputPaths cleanup handled by cleanupFiles
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(...inputPaths, outputPath);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(mergepdfHandler, {
+  toolName: 'merge-pdf',
+  category: 'pdf',
+});

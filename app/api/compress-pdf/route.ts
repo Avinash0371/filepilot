@@ -12,8 +12,10 @@ import {
   generateTmpPath,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function compresspdfHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   let inputPath = '';
   let outputPath = '';
-
+    
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -43,7 +45,9 @@ export async function POST(request: NextRequest) {
     
 
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     outputPath = generateTmpPath('.pdf');
+    registerForCleanup(outputPath);
 
     // Compress PDF using Ghostscript
     await execAsync(`gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile="${outputPath}" "${inputPath}"`);
@@ -61,6 +65,14 @@ export async function POST(request: NextRequest) {
     console.error('Compress PDF error:', error);
     return errorResponse('Compression failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(inputPath, outputPath);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(compresspdfHandler, {
+  toolName: 'compress-pdf',
+  category: 'pdf',
+});

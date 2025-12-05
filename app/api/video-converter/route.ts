@@ -11,10 +11,12 @@ import {
   generateTmpPath,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs, getClientIp } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 import conversionQueue from '@/lib/conversionQueue';
 import { randomUUID } from 'crypto';
 
-export async function POST(request: NextRequest) {
+async function videoconverterHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -77,13 +79,16 @@ export async function POST(request: NextRequest) {
     // Process the video conversion
     let inputPath = '';
     let outputPath = '';
+    
 
     try {
       const inputExt = file.name.toLowerCase().endsWith('.mp4') ? 'mp4' : 'webm';
       const outputExt = outputFormat === 'webm' ? 'webm' : outputFormat === 'mp4' ? 'mp4' : (inputExt === 'mp4' ? 'webm' : 'mp4');
 
       inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
       outputPath = generateTmpPath(`.${outputExt}`);
+    registerForCleanup(outputPath);
 
       // Convert video using FFmpeg
       await execAsync(`ffmpeg -i "${inputPath}" -y "${outputPath}"`);
@@ -111,6 +116,8 @@ export async function POST(request: NextRequest) {
       conversionQueue.completeJob(currentJobId, 'Conversion failed');
       return errorResponse('Conversion failed. Please try again.', 500);
     } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
       await cleanupFiles(inputPath, outputPath);
     }
   } catch (error) {
@@ -118,3 +125,9 @@ export async function POST(request: NextRequest) {
     return errorResponse('Conversion failed. Please try again.', 500);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(videoconverterHandler, {
+  toolName: 'video-converter',
+  category: 'video',
+});

@@ -12,8 +12,10 @@ import {
   generateTmpPath,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function audioconverterHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
   
   let inputPath = '';
   let outputPath = '';
-  
+    
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -47,7 +49,9 @@ export async function POST(request: NextRequest) {
     const outputExt = outputFormat === 'wav' ? 'wav' : outputFormat === 'mp3' ? 'mp3' : (inputExt === 'mp3' ? 'wav' : 'mp3');
     
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     outputPath = generateTmpPath(`.${outputExt}`);
+    registerForCleanup(outputPath);
     
     // Convert audio using FFmpeg
     await execAsync(`ffmpeg -i "${inputPath}" -y "${outputPath}"`);
@@ -79,6 +83,14 @@ export async function POST(request: NextRequest) {
     console.error('Audio conversion error:', error);
     return errorResponse('Conversion failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(inputPath, outputPath);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(audioconverterHandler, {
+  toolName: 'audio-converter',
+  category: 'audio',
+});

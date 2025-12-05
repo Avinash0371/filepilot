@@ -11,10 +11,12 @@ import {
   generateTmpPath,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs, getClientIp } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 import conversionQueue from '@/lib/conversionQueue';
 import { randomUUID } from 'crypto';
 
-export async function POST(request: NextRequest) {
+async function videocompressorHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -77,6 +79,7 @@ export async function POST(request: NextRequest) {
     // Process the video compression
     let inputPath = '';
     let outputPath = '';
+    
 
     try {
       // CRF: 0 (lossless) to 51 (worst), 23 is default, 28 is reasonable for compression
@@ -87,7 +90,9 @@ export async function POST(request: NextRequest) {
       }
 
       inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
       outputPath = generateTmpPath('.mp4');
+    registerForCleanup(outputPath);
 
       // Compress video using FFmpeg with CRF
       await execAsync(`ffmpeg -i "${inputPath}" -vcodec libx264 -crf ${crfValue} -y "${outputPath}"`);
@@ -111,6 +116,8 @@ export async function POST(request: NextRequest) {
       conversionQueue.completeJob(currentJobId, 'Compression failed');
       return errorResponse('Compression failed. Please try again.', 500);
     } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
       await cleanupFiles(inputPath, outputPath);
     }
   } catch (error) {
@@ -118,3 +125,9 @@ export async function POST(request: NextRequest) {
     return errorResponse('Compression failed. Please try again.', 500);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(videocompressorHandler, {
+  toolName: 'video-compressor',
+  category: 'video',
+});

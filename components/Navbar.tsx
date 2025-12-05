@@ -21,6 +21,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt="FilePilot Logo"

@@ -12,8 +12,10 @@ import {
   generateTmpPath,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function pngtojpgHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   let inputPath = '';
   let outputPath = '';
-
+    
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -43,7 +45,9 @@ export async function POST(request: NextRequest) {
     
 
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     outputPath = generateTmpPath('.jpg');
+    registerForCleanup(outputPath);
 
     // Convert PNG to JPG using ImageMagick
     await execAsync(`convert "${inputPath}" -background white -flatten "${outputPath}"`);
@@ -61,6 +65,14 @@ export async function POST(request: NextRequest) {
     console.error('PNG to JPG error:', error);
     return errorResponse('Conversion failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(inputPath, outputPath);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(pngtojpgHandler, {
+  toolName: 'png-to-jpg',
+  category: 'image',
+});

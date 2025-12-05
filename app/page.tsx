@@ -93,6 +93,7 @@ export default function HomePage() {
 
                   {/* Center Logo with Breathing Animation */}
                   <div className="relative z-10" style={{ animation: 'logo-breathe 4s ease-in-out infinite' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="/logo.png"
                       alt="FilePilot"

@@ -15,8 +15,10 @@ import {
   getContentType,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function imagecompressorHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
   
   let inputPath = '';
   let outputPath = '';
-  
+    
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -50,6 +52,7 @@ export async function POST(request: NextRequest) {
     }
     
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     const ext = path.extname(file.name).toLowerCase();
     const originalSize = file.size;
     const targetSize = Math.floor(originalSize * (targetPercentValue / 100));
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
     // For PNG, we'll convert to JPEG for better compression or use pngquant
     
     outputPath = generateTmpPath(ext === '.png' ? '.png' : '.jpg');
+    registerForCleanup(outputPath);
     
     if (ext === '.png') {
       // For PNG: Use pngquant for lossy compression with target size
@@ -95,6 +99,7 @@ export async function POST(request: NextRequest) {
       
       if (bestOutput) {
         outputPath = bestOutput;
+    registerForCleanup(outputPath);
       }
       
       // Check if we still haven't reached target - apply resize
@@ -121,15 +126,18 @@ export async function POST(request: NextRequest) {
             if (bestOutput && bestOutput !== outputPath) await cleanupFiles(bestOutput);
             await cleanupFiles(resizedOutput);
             outputPath = finalOutput;
+    registerForCleanup(outputPath);
           } else {
             await cleanupFiles(finalOutput);
             if (bestOutput && bestOutput !== outputPath) await cleanupFiles(bestOutput);
             outputPath = resizedOutput;
+    registerForCleanup(outputPath);
           }
         } catch {
           await cleanupFiles(finalOutput);
           if (bestOutput && bestOutput !== outputPath) await cleanupFiles(bestOutput);
           outputPath = resizedOutput;
+    registerForCleanup(outputPath);
         }
       }
     } else {
@@ -173,6 +181,7 @@ export async function POST(request: NextRequest) {
       
       if (bestOutput) {
         outputPath = bestOutput;
+    registerForCleanup(outputPath);
       } else {
         // Fallback with default quality
         await execAsync(`convert "${inputPath}" -quality 60 "${outputPath}"`);
@@ -187,6 +196,7 @@ export async function POST(request: NextRequest) {
         await execAsync(`convert "${outputPath}" -resize ${resizePercent}% -quality ${bestQuality} "${resizedOutput}"`);
         await cleanupFiles(outputPath);
         outputPath = resizedOutput;
+    registerForCleanup(outputPath);
       }
     }
     
@@ -206,6 +216,14 @@ export async function POST(request: NextRequest) {
     console.error('Image compression error:', error);
     return errorResponse('Compression failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(inputPath, outputPath);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(imagecompressorHandler, {
+  toolName: 'image-compressor',
+  category: 'image',
+});

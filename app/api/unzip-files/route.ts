@@ -15,9 +15,11 @@ import {
   TMP_DIR,
 } from '@/lib/fileUtils';
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function POST(request: NextRequest) {
+async function unzipfilesHandler(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, rateLimitConfigs.conversion);
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit.reset);
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
     
     
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     outputDir = path.join(TMP_DIR, uuidv4());
     await fs.mkdir(outputDir, { recursive: true });
     
@@ -102,7 +105,15 @@ export async function POST(request: NextRequest) {
     console.error('Unzip error:', error);
     return errorResponse('Extraction failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    // outputPath not used
     await cleanupFiles(inputPath, reZipPath);
     await cleanupDir(outputDir);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(unzipfilesHandler, {
+  toolName: 'unzip-files',
+  category: 'archive',
+});

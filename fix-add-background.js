@@ -1,4 +1,7 @@
-import { NextRequest } from 'next/server';
+const fs = require('fs');
+const path = require('path');
+
+const content = `import { NextRequest } from 'next/server';
 import * as path from 'path';
 import {
   saveUploadedFile,
@@ -53,22 +56,22 @@ async function addbackgroundHandler(request: NextRequest) {
     const baseName = path.basename(inputPath, ext);
     const outputDir = path.dirname(inputPath);
     const outExt = outputFormat === 'jpg' ? 'jpg' : 'png';
-    outputPath = path.join(outputDir, `${baseName}_bg.${outExt}`);
+    outputPath = path.join(outputDir, \`\${baseName}_bg.\${outExt}\`);
     registerForCleanup(outputPath);
     
     // Add background color using ImageMagick
     // First flatten the image onto the background color
     if (outputFormat === 'jpg') {
       // For JPG output, flatten to remove transparency
-      await execAsync(`convert "${inputPath}" -background "${bgColor}" -flatten -quality 95 "${outputPath}"`);
+      await execAsync(\`convert "\${inputPath}" -background "\${bgColor}" -flatten -quality 95 "\${outputPath}"\`);
     } else {
       // For PNG, keep the file but with background
-      await execAsync(`convert "${inputPath}" -background "${bgColor}" -flatten "${outputPath}"`);
+      await execAsync(\`convert "\${inputPath}" -background "\${bgColor}" -flatten "\${outputPath}"\`);
     }
     
     const buffer = await readFileAsBuffer(outputPath);
     const mimeType = outputFormat === 'jpg' ? 'image/jpeg' : 'image/png';
-    const outputFilename = file.name.replace(/\\.(png|webp|gif)$/i, `_bg.${outExt}`);
+    const outputFilename = file.name.replace(/\\\\.(png|webp|gif)$/i, \`_bg.\${outExt}\`);
     
     const response = fileResponse(buffer, outputFilename, mimeType);
     const rateLimitHeaders = createRateLimitHeaders(rateLimit.limit, rateLimit.remaining, rateLimit.reset);
@@ -90,3 +93,8 @@ export const POST = withProductionFeatures(addbackgroundHandler, {
   toolName: 'add-background',
   category: 'image',
 });
+`;
+
+const filePath = path.join(__dirname, 'app', 'api', 'add-background', 'route.ts');
+fs.writeFileSync(filePath, content, 'utf8');
+console.log('add-background route fixed');

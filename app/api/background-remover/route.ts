@@ -10,11 +10,14 @@ import {
   validateFileSize,
   execAsync,
 } from '@/lib/fileUtils';
+import { checkRateLimit, createRateLimitHeaders, rateLimitResponse, rateLimitConfigs } from '@/lib/rateLimit';
+import { withProductionFeatures } from '@/lib/apiWrapper';
+import { registerForCleanup, unregisterFromCleanup } from '@/lib/fileUtilsEnhanced';
 
-export async function POST(request: NextRequest) {
+async function backgroundremoverHandler(request: NextRequest) {
   let inputPath = '';
   let outputPath = '';
-  
+    
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -32,10 +35,12 @@ export async function POST(request: NextRequest) {
     }
     
     inputPath = await saveUploadedFile(file);
+    registerForCleanup(inputPath);
     const ext = path.extname(inputPath);
     const baseName = path.basename(inputPath, ext);
     const outputDir = path.dirname(inputPath);
     outputPath = path.join(outputDir, `${baseName}_nobg.png`);
+    registerForCleanup(outputPath);
     
     // Remove background using ImageMagick
     // This uses flood fill to remove similar colored pixels from corners
@@ -61,6 +66,14 @@ export async function POST(request: NextRequest) {
     console.error('Background removal error:', error);
     return errorResponse('Background removal failed. Please try again.', 500);
   } finally {
+    unregisterFromCleanup(inputPath);
+    unregisterFromCleanup(outputPath);
     await cleanupFiles(inputPath, outputPath);
   }
 }
+
+// Export with production features
+export const POST = withProductionFeatures(backgroundremoverHandler, {
+  toolName: 'background-remover',
+  category: 'image',
+});
